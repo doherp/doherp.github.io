@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Button Saver</title>
+</head>
+
+<body>
+  <h1>Button Saver</h1>
+  <div id="buttons"></div>
+  <input type="text" id="labelInput" placeholder="Button Label">
+  <input type="text" id="valueInput" placeholder="Button Value">
+  <button onclick="addButton()">Add Button</button>
+  <button onclick="downloadData()">Download</button>
+
+
+  <script>
+    async function addButton() {
+      const label = document.getElementById('labelInput').value;
+      const value = document.getElementById('valueInput').value;
+
+      if (!label || !value) {
+        alert('Please enter both label and value.');
+        return;
+      }
+
+      const response = await fetch('/buttons', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ label, value })
+      });
+
+      if (response.ok) {
+        alert('Button added successfully!');
+        document.getElementById('labelInput').value = '';
+        document.getElementById('valueInput').value = '';
+        loadButtons();
+      } else {
+        alert('Failed to add button.');
+      }
+    }
+
+    async function loadButtons() {
+      const response = await fetch('/buttons');
+      const buttons = await response.json();
+
+      const buttonsDiv = document.getElementById('buttons');
+      buttonsDiv.innerHTML = '';
+
+      buttons.forEach(button => {
+        const buttonElement = document.createElement('button');
+        buttonElement.textContent = button.label;
+        buttonElement.onclick = () => {
+          //alert(`Button Value: ${button.value}\nTimestamp: ${new Date(button.timestamp)}`);
+          senddata(button.value);
+        };
+        buttonsDiv.appendChild(buttonElement);
+      });
+    }
+    
+    // function to send data to server when a button is clicked
+    function senddata(buttonname) {
+      console.log('senddata(buttonname)', buttonname);
+      const data = `data for ${buttonname}`;
+      fetch('/save', {
+        method: 'post',
+        headers: {
+          'content-type': 'application/json'
+        },
+        body: JSON.stringify({ buttonname, data })
+      })
+        .then(response => response.text())
+        .then(message => console.log(message))
+        .catch(error => console.error('error:', error));
+    }
+
+    async function downloadData() {
+      // Creating a downloadable file from webpage data
+      //let data = 'Some data to save';
+      let data = localStorage.getItem('key');
+      let blob = new Blob([data], { type: 'text/plain' });
+      let url = window.URL.createObjectURL(blob);
+      let a = document.createElement('a');
+      a.href = url;
+      a.download = 'myfile.txt';
+      a.click();
+    }
+
+    loadButtons();
+  </script>
+</body>
+
+</html>
+
+
+
+<!-- <!DOCTYPE html> -->
+<!-- <html lang="en"> -->
+<!-- <head> -->
+<!-- <meta charset="UTF-8"> -->
+<!-- <meta name="viewport" content="width=device-width, initial-scale=1.0"> -->
+<!-- <title>Button Logger</title> -->
+<!-- </head> -->
+<!-- <body> -->
+<!-- <h1>Button Logger</h1> -->
+<!-- <button id="button1">Button 1</button> -->
+<!-- <button id="button2">Button 2</button> -->
+
+<!-- <script> -->
+<!-- // Function to send data to server when a button is clicked -->
+<!-- function sendData(buttonName) { -->
+<!-- const data = `Data for ${buttonName}`; -->
+<!-- fetch('/save', { -->
+<!-- method: 'POST', -->
+<!-- headers: { -->
+<!-- 'Content-Type': 'application/json' -->
+<!-- }, -->
+<!-- body: JSON.stringify({ buttonName, data }) -->
+<!-- }) -->
+<!-- .then(response => response.text()) -->
+<!-- .then(message => console.log(message)) -->
+<!-- .catch(error => console.error('Error:', error)); -->
+<!-- } -->
+
+<!-- // Add event listeners to buttons -->
+<!-- document.getElementById('button1').addEventListener('click', () => sendData('Button 1')); -->
+<!-- document.getElementById('button2').addEventListener('click', () => sendData('Button 2')); -->
+<!-- </script> -->
+<!-- </body> -->
+<!-- </html> -->
